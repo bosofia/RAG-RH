@@ -1,9 +1,20 @@
 import re
 import json
+import numpy as np
+
 from typing import Dict, List
+
 from pypdf import PdfReader
+import easyocr
+from pdf2image import convert_from_path
 
 HIERARCHY = ["livre", "titre", "chapitre", "section", "sous_section"]
+
+class ParsingError(Exception):
+    """Custom exception for parsing errors"""
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 def update_context(context, level, value):
     """
@@ -51,6 +62,8 @@ def parse(text: str, source_path: str, origine: str, article_pattern=1) -> List[
     # Découpage par articles
     article_pattern = article_pattern_1 if article_pattern == 1 else article_pattern_2
     parts = re.split(article_pattern, text)
+    if len(parts) < 2:
+        raise ParsingError("Aucun article trouvé dans le texte fourni.")
     
     for i in range(1, len(parts), 2):
         header = parts[i].strip()
@@ -147,6 +160,20 @@ def parse_pdf(file_dict: Dict, file_name: str) -> Dict[str, Dict]:
     articles = parse(full_text, source_path=file_path, origine=file_name, article_pattern=article_pattern)
     return articles
 
+def extract_text_with_ocr(file_path: str) -> str:
+    """
+    Extract text from a PDF file using OCR.
+    """
+    pages = convert_from_path(file_path)
+    ocr_reader = easyocr.Reader(['fr'], gpu=False)
+    full_text = ""
+    
+    for page in pages:
+        result_ocr = ocr_reader.readtext(np.array(page))
+        for _, text, _ in result_ocr:
+            full_text += text + "\n"
+    return full_text
+
 def parse_from_metadata(file_metadata_path: str) -> Dict[str, Dict]:
     """
     Parse multiple PDF files based on provided metadata.
@@ -163,8 +190,15 @@ def parse_from_metadata(file_metadata_path: str) -> Dict[str, Dict]:
             print(f"Parsed {len(articles)} articles from {file_name}.")
             print(f"Saved parsed articles to sources/parsed/parsed_{file_name}.json")
         except Exception as e:
-            print(f"Error parsing {file_name}: {e}")
-            continue
+            print(f"Error parsing {file_name}: {e} using OCR instead...")
+            try:
+                text = extract_text_with_ocr(file_dict["file_path"])
+                articles = parse(text, source_path=file_dict["file_path"], origine=file_name, article_pattern=file_dict.get("article_pattern", 1))
+                json.dump(articles, open(f"sources/parsed/parsed_{file_name}.json", 'w', encoding='utf-8'), ensure_ascii=False, indent=4)
+                print(f"Parsed {len(articles)} articles from {file_name} using OCR.")
+                print(f"Saved parsed articles to sources/parsed/parsed_{file_name}.json")
+            except Exception as e2:
+                print(f"Error parsing {file_name} with OCR: {e2}")
 
 ########################################################## SUMMARIZATION ##########################################################
 
