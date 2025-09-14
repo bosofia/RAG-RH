@@ -1,0 +1,33 @@
+{
+    "jorf_19581005": {
+        "file_path": "sources/raw/JORF_19581005_234.pdf",
+        "header_lines": 2,
+        "footer_lines": 0,
+        "page_offset_start": 1,
+        "page_offset_end": -8
+
+    },
+    "code_entree_et_sejour_etranger": {
+        "file_path": "sources/raw/LEGITEXT000006070158.pdf",
+        "header_lines": 0,
+        "footer_lines": 1,
+        "page_offset_start": 0
+    },
+    "declaration_droits_homme": {
+        "file_path": "sources/raw/ddhc_1789.pdf",
+        "header_lines": 0,
+        "footer_lines": 1
+    },
+    "charte_environnement": {
+        "file_path": "sources/raw/Charte de l’environnement (2004).pdf",
+        "header_lines": 0,
+        "footer_lines": 0
+    },
+    "preambule_constitution": {
+        "file_path": "sources/raw/20190307_preambule_constitution_1946.pdf",
+        "header_lines": 0,
+        "footer_lines": 1,
+        "article_pattern": 2
+    }
+
+}
